@@ -1,4 +1,4 @@
-import os,sys,thread,socket, time, select , string, numpy
+import os,sys,thread,socket, time, select , string, numpy, pickle
 
 #********* CONSTANT VARIABLES *********
 BACKLOG = 50            # how many pending connections queue will hold
@@ -6,6 +6,31 @@ MAX_DATA_RECV = 999999  # max number of bytes we receive at once
 DEBUG = True            # set to True to see the debug msgs
 BLOCKED = []            # just an example. Remove with [""] for no blocking at all.
 
+
+class event_list():
+
+    def __init__(self):
+        self.tail = -1
+        self.head = 0
+        self.event_lst = []
+
+    def push(self, item):
+        self.tail += 1
+        self.event_lst.append(item)
+        return self.tail
+
+    def pop(self, indx):
+        if indx <= self.tail:
+            return self.event_lst[indx]
+
+    def fifo(self):
+        if self.head <= self.tail:
+            tmpp = self.event_lst[self.head]
+            self.head += 1
+            return tmpp
+
+def store (event_):
+    print "store"
 
 def main():
 
@@ -50,7 +75,8 @@ def main():
 def proxy_thread(conn, client_addr):
     host = "192.168.4.2"
     port = 23
-     
+    
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2)
      
@@ -87,7 +113,7 @@ def proxy_thread(conn, client_addr):
                 data = sock.recv(4096)
                 print data
                 # if not int(nby) <1 :
-                if not data :
+                if not data:
                     print 'Connection server closed'
                     # sys.exit()
                     if s:
@@ -95,15 +121,18 @@ def proxy_thread(conn, client_addr):
                     if conn:
                         conn.close()
                     return
-                else :
+                else:
                     print "s data"
                     # sys.stdout.write(data)
-                    conn.send(data)
+                    if plan == 1:
+                        conn.send(data)
+                    else:
+                        store(data)
              
             #user entered a message
-            else :
+            else:
                 msg = conn.recv(4096)
-                if not msg :
+                if not msg:
                     print 'Connection agent closed'
                     # sys.exit()
                     if s:
@@ -117,5 +146,6 @@ def proxy_thread(conn, client_addr):
 
     
 if __name__ == '__main__':
+    eList = event_list()
     main()
 
